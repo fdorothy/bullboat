@@ -1,34 +1,74 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
-import Mushroom from '../sprites/Mushroom'
+import Player from '../sprites/Player'
+
+import config from '../config'
 
 export default class extends Phaser.State {
-  init () {}
+  init () {
+    this.stage.backgroundColor = '#000'
+  }
   preload () {}
 
   create () {
-    const bannerText = 'Phaser + ES6 + Webpack'
-    let banner = this.add.text(this.world.centerX, this.game.height - 80, bannerText)
-    banner.font = 'Bangers'
-    banner.padding.set(10, 16)
-    banner.fontSize = 40
-    banner.fill = '#77BFA3'
-    banner.smoothed = false
-    banner.anchor.setTo(0.5)
-
-    this.mushroom = new Mushroom({
-      game: this,
-      x: this.world.centerX,
-      y: this.world.centerY,
-      asset: 'mushroom'
+    this.player = new Player({
+      game: this.game,
+      x: config.initial.start.x,
+      y: config.initial.start.y,
+      asset: 'ms'
     })
 
-    this.game.add.existing(this.mushroom)
+    this.game.physics.startSystem(Phaser.Physics.ARCADE);
+    this.map = game.add.tilemap('level');
+    this.map.addTilesetImage('tiles', 'gametiles');
+
+    this.doors = this.map.createLayer('doors');
+    this.bg = this.map.createLayer('background');
+    this.bounds = this.map.createLayer('bounds');
+
+    this.game.add.existing(this.player)
+
+    this.water = this.map.createLayer('water');
+    this.bg = this.map.createLayer('foreground');
+
+    this.bounds.resizeWorld();
+    this.map.setCollisionBetween(1, 2000, true, 'bounds');
+
+    this.water.alpha = 0.6;
+
+    this.cursor = this.game.input.keyboard.createCursorKeys();
+    this.game.input.keyboard.addKeyCapture([
+    	Phaser.Keyboard.LEFT,
+    	Phaser.Keyboard.RIGHT,
+    	Phaser.Keyboard.UP,
+    	Phaser.Keyboard.DOWN,
+    	Phaser.Keyboard.SPACEBAR
+    ]);
+
+    // shadowTexture = this.game.add.bitmapData(this.game.width, this.game.height);
+    // lightSprite = this.game.add.image(this.game.camera.x, this.game.camera.y, shadowTexture);
+    // lightSprite.blendMode = Phaser.blendModes.MULTIPLY;
   }
 
   render () {
-    if (__DEV__) {
-      this.game.debug.spriteInfo(this.mushroom, 32, 32)
+  }
+
+  update() {
+    game.physics.arcade.collide(this.player, this.bounds);
+    var blocked = this.player.body.blocked.down;
+    if (this.cursor.left.isDown) {
+      this.player.moveLeft();
     }
+    else if (this.cursor.right.isDown) {
+      this.player.moveRight();
+    }
+    else if (blocked) {
+      this.player.stop();
+    }
+    if (this.cursor.up.isDown) {
+      this.player.jump();
+    }
+    //lightSprite.reset(game.camera.x, game.camera.y);
+    //updateShadowTexture();
   }
 }

@@ -19,7 +19,7 @@ export default class extends Phaser.State {
     retry.inputEnabled = true;
     retry.input.priorityID = 1;
     retry.input.useHandCursor = true;
-    retry.events.onInputDown.add(onretry, this);
+    retry.events.onInputDown.add(this.onretry, this);
   }
 
   onretry () {

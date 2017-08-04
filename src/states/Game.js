@@ -10,31 +10,49 @@ export default class extends Phaser.State {
   }
   preload () {}
 
+  bigPixels(size) {
+    game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+    game.scale.setUserScale(size, size);
+
+    // enable crisp rendering
+    game.renderer.renderSession.roundPixels = true;
+    Phaser.Canvas.setImageRenderingCrisp(this.game.canvas);
+  }
+
   create () {
+    this.bigPixels(4);
+
     this.player = new Player({
       game: this.game,
-      x: config.initial.start.x,
-      y: config.initial.start.y,
+      x: 32,
+      y: 64 - 6,
       asset: 'ms'
     })
+    this.player.visible = false;
+
+    var pts = [];
+    var N = 10;
+    for (var i=0; i<N; i++) {
+      var p = {world: {x: 16.0, y: 0.0, z: i*10.0 + 1.0}, camera: {}, screen: {}};
+      this.project(p, 10);
+      console.log(p.screen);
+      pts.push(new Phaser.Point(p.screen.x, p.screen.y));
+    }
+    for (var i=N-1; i>=0; i--) {
+      var p = {world: {x: 48.0, y: 0.0, z: i*10.0 + 1.0}, camera: {}, screen: {}};
+      this.project(p, 10);
+      console.log(p.screen);
+      pts.push(new Phaser.Point(p.screen.x, p.screen.y));
+    }
+
+    this.riverBounds = new Phaser.Polygon(pts);
+    this.graphics = game.add.graphics(0, 0);
+    this.graphics.beginFill(0x00aaff);
+    this.graphics.drawPolygon(this.riverBounds.points);
+    this.graphics.endFill();
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
-    this.map = game.add.tilemap('level');
-    this.map.addTilesetImage('tiles', 'gametiles');
-
-    this.doors = this.map.createLayer('doors');
-    this.bg = this.map.createLayer('background');
-    this.bounds = this.map.createLayer('bounds');
-
     this.game.add.existing(this.player)
-
-    this.water = this.map.createLayer('water');
-    this.bg = this.map.createLayer('foreground');
-
-    this.bounds.resizeWorld();
-    this.map.setCollisionBetween(1, 2000, true, 'bounds');
-
-    this.water.alpha = 0.6;
 
     this.cursor = this.game.input.keyboard.createCursorKeys();
     this.game.input.keyboard.addKeyCapture([
@@ -44,31 +62,36 @@ export default class extends Phaser.State {
     	Phaser.Keyboard.DOWN,
     	Phaser.Keyboard.SPACEBAR
     ]);
-
-    // shadowTexture = this.game.add.bitmapData(this.game.width, this.game.height);
-    // lightSprite = this.game.add.image(this.game.camera.x, this.game.camera.y, shadowTexture);
-    // lightSprite.blendMode = Phaser.blendModes.MULTIPLY;
   }
 
   render () {
   }
 
   update() {
-    game.physics.arcade.collide(this.player, this.bounds);
-    var blocked = this.player.body.blocked.down;
+    this.graphics.clear();
+    this.graphics.beginFill(0xFF33ff);
+    this.graphics.drawPolygon(this.riverBounds.points);
+    this.graphics.endFill();
+
     if (this.cursor.left.isDown) {
       this.player.moveLeft();
     }
     else if (this.cursor.right.isDown) {
       this.player.moveRight();
-    }
-    else if (blocked) {
+    } else {
       this.player.stop();
     }
-    if (this.cursor.up.isDown) {
-      this.player.jump();
-    }
-    //lightSprite.reset(game.camera.x, game.camera.y);
-    //updateShadowTexture();
+  }
+
+  project(p, roadWidth) {
+    var width = config.gameWidth;
+    var height = config.gameHeight;
+    p.camera.x     = (p.world.x || 0) - config.camera.x;
+    p.camera.y     = (p.world.y || 0) - config.camera.y;
+    p.camera.z     = (p.world.z || 0) - config.camera.z;
+    p.screen.scale = config.camera.depth/p.camera.z;
+    p.screen.x     = Math.round((width/2)  + (p.screen.scale * p.camera.x  * width/2));
+    p.screen.y     = Math.round((height/8) - (p.screen.scale * p.camera.y  * height/8));
+    p.screen.w     = Math.round(             (p.screen.scale * roadWidth   * width/2));
   }
 }

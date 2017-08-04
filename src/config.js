@@ -1,30 +1,20 @@
 export default {
-  gameWidth: 760,
-  gameHeight: 400,
-  localStorageName: 'phaseres6webpack',
+  gameWidth: 64,
+  gameHeight: 64,
+  localStorageName: 'bullboat',
   world: {
     gravity: 300
   },
   player: {
-    initialSpeed: 50,
-    targetSpeed: 150,
-    targetJumpSpeed: 300,
-    jumps: 2,
-    airAccel: 100,
-    groundAccel: 200,
-    groundDeaccel: 2000
+    accel: 20,
+    deaccel: 15,
+    targetSpeed: 10,
+    initialSpeed: 1
   },
-  maps: {
-    level2: {
-      tiles: 'assets/maps/level2.json',
-      tilesheet: 'assets/images/tiles2.png'
-    }
-  },
-  initial: {
-    map: 'level2',
-    start: {
-      x: 100,
-      y: 60
-    }
+  camera: {
+    x: 32.0,
+    y: 96.0,
+    z: 0.0,
+    depth: 0.5
   }
 }

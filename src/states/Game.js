@@ -28,7 +28,6 @@ export default class extends Phaser.State {
       y: 64 - 6,
       asset: 'ms'
     })
-    this.player.visible = false;
 
     var pts = [];
     var N = 10;

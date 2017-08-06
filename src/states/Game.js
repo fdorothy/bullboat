@@ -41,6 +41,7 @@ export default class extends Phaser.State {
     }, 1000, this);
 
 
+    // create the bounds of the river
     var pts = [];
     var N = 10;
     for (var i=0; i<N; i++) {
@@ -55,12 +56,17 @@ export default class extends Phaser.State {
       console.log(p.screen);
       pts.push(new Phaser.Point(p.screen.x, p.screen.y));
     }
-
     this.riverBounds = new Phaser.Polygon(pts);
     this.graphics = game.add.graphics(0, 0);
-    this.graphics.beginFill(0x00aaff);
-    this.graphics.drawPolygon(this.riverBounds.points);
-    this.graphics.endFill();
+
+    // create the bounds of the land
+    pts = [
+      new Phaser.Point(0, 12),
+      new Phaser.Point(64, 12),
+      new Phaser.Point(64, 64),
+      new Phaser.Point(0, 64)
+    ];
+    this.landBounds = new Phaser.Polygon(pts);
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
     this.game.add.existing(this.raft)
@@ -80,14 +86,20 @@ export default class extends Phaser.State {
   }
 
   render () {
+    this.graphics.clear();
+
+    // draw the land
+    this.graphics.beginFill(0x248a66);
+    this.graphics.drawPolygon(this.landBounds.points);
+    this.graphics.endFill();
+
+    // draw the water
+    this.graphics.beginFill(0x0088e9);
+    this.graphics.drawPolygon(this.riverBounds.points);
+    this.graphics.endFill();
   }
 
   update() {
-    this.graphics.clear();
-    this.graphics.beginFill(0xFF33ff);
-    this.graphics.drawPolygon(this.riverBounds.points);
-    this.graphics.endFill();
-
     if (this.cursor.left.isDown) {
       this.raft.moveLeft();
     }

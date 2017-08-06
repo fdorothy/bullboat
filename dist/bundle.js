@@ -3974,15 +3974,17 @@ var _class = function (_Phaser$Sprite) {
   function _class(_ref) {
     var game = _ref.game,
         x = _ref.x,
-        y = _ref.y,
-        asset = _ref.asset;
+        y = _ref.y;
 
     _classCallCheck(this, _class);
 
-    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, game, x, y, asset));
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, game, x, y, "sprites"));
 
     game.physics.arcade.enable(_this);
     _this.anchor.setTo(0.5, 1.0);
+
+    _this.animations.add('standing', ['raft'], 5, true);
+    _this.animations.play('standing');
     return _this;
   }
 
@@ -4001,7 +4003,6 @@ var _class = function (_Phaser$Sprite) {
         vx = -_config2.default.player.initialSpeed;
       }
       this.body.velocity.x = vx;
-      this.scale.x = -1;
       this.paddleAnimation();
     }
   }, {
@@ -4016,7 +4017,6 @@ var _class = function (_Phaser$Sprite) {
         vx = _config2.default.player.initialSpeed;
       }
       this.body.velocity.x = vx;
-      this.scale.x = 1;
       this.paddleAnimation();
     }
   }, {
@@ -4159,6 +4159,10 @@ var _Player = __webpack_require__(/*! ../sprites/Player */ 121);
 
 var _Player2 = _interopRequireDefault(_Player);
 
+var _Man = __webpack_require__(/*! ../sprites/Man */ 315);
+
+var _Man2 = _interopRequireDefault(_Man);
+
 var _config = __webpack_require__(/*! ../config */ 61);
 
 var _config2 = _interopRequireDefault(_config);
@@ -4204,13 +4208,19 @@ var _class = function (_Phaser$State) {
     value: function create() {
       this.bigPixels(4);
 
-      this.player = new _Player2.default({
+      this.raft = new _Player2.default({
         game: this.game,
         x: 32,
-        y: 64 - 6,
-        asset: 'raft'
+        y: 64 - 6
       });
+      this.men = [new _Man2.default({ game: this.game, x: -5, y: -5 }), new _Man2.default({ game: this.game, x: 5, y: -5 }), new _Man2.default({ game: this.game, x: -2, y: -3 }), new _Man2.default({ game: this.game, x: 2, y: -1 })];
+      // have one of them turn every second
+      setInterval(function (ctx) {
+        var man = Math.floor(Math.random() * ctx.men.length);
+        ctx.men[man].scale.x = -ctx.men[man].scale.x;
+      }, 1000, this);
 
+      // create the bounds of the river
       var pts = [];
       var N = 10;
       for (var i = 0; i < N; i++) {
@@ -4225,36 +4235,55 @@ var _class = function (_Phaser$State) {
         console.log(p.screen);
         pts.push(new _phaser2.default.Point(p.screen.x, p.screen.y));
       }
-
       this.riverBounds = new _phaser2.default.Polygon(pts);
       this.graphics = game.add.graphics(0, 0);
-      this.graphics.beginFill(0x00aaff);
-      this.graphics.drawPolygon(this.riverBounds.points);
-      this.graphics.endFill();
+
+      // create the bounds of the land
+      pts = [new _phaser2.default.Point(0, 12), new _phaser2.default.Point(64, 12), new _phaser2.default.Point(64, 64), new _phaser2.default.Point(0, 64)];
+      this.landBounds = new _phaser2.default.Polygon(pts);
 
       this.game.physics.startSystem(_phaser2.default.Physics.ARCADE);
-      this.game.add.existing(this.player);
+      this.game.add.existing(this.raft);
+      for (var i = 0; i < this.men.length; i++) {
+        console.log("added dude");
+        this.game.add.existing(this.men[i]);
+      }
 
       this.cursor = this.game.input.keyboard.createCursorKeys();
       this.game.input.keyboard.addKeyCapture([_phaser2.default.Keyboard.LEFT, _phaser2.default.Keyboard.RIGHT, _phaser2.default.Keyboard.UP, _phaser2.default.Keyboard.DOWN, _phaser2.default.Keyboard.SPACEBAR]);
     }
   }, {
     key: 'render',
-    value: function render() {}
+    value: function render() {
+      this.graphics.clear();
+
+      // draw the land
+      this.graphics.beginFill(0x248a66);
+      this.graphics.drawPolygon(this.landBounds.points);
+      this.graphics.endFill();
+
+      // draw the water
+      this.graphics.beginFill(0x0088e9);
+      this.graphics.drawPolygon(this.riverBounds.points);
+      this.graphics.endFill();
+    }
   }, {
     key: 'update',
     value: function update() {
-      this.graphics.clear();
-      this.graphics.beginFill(0xFF33ff);
-      this.graphics.drawPolygon(this.riverBounds.points);
-      this.graphics.endFill();
-
       if (this.cursor.left.isDown) {
-        this.player.moveLeft();
+        this.raft.moveLeft();
       } else if (this.cursor.right.isDown) {
-        this.player.moveRight();
+        this.raft.moveRight();
       } else {
-        this.player.stop();
+        this.raft.stop();
+      }
+
+      // update the dudes on the raft's position
+      var cx = this.raft.x;
+      var cy = this.raft.y;
+      for (var i = 0; i < this.men.length; i++) {
+        this.men[i].x = this.men[i].rel_x + cx;
+        this.men[i].y = this.men[i].rel_y + cy;
       }
     }
   }, {
@@ -4407,6 +4436,7 @@ var _class = function (_Phaser$State) {
       this.loaderBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'loaderBar');
       (0, _utils.centerGameObjects)([this.loaderBg, this.loaderBar]);
       this.load.setPreloadSprite(this.loaderBar);
+      this.game.load.atlas("sprites", "assets/images/spritesheet.png", "assets/images/sprites.json");
     }
   }, {
     key: 'create',
@@ -10206,6 +10236,84 @@ module.exports = __webpack_require__(/*! ./modules/_core */ 24);
 __webpack_require__(/*! babel-polyfill */120);
 module.exports = __webpack_require__(/*! /Users/fredricdorothy/personal/games/bullboat/src/main.js */119);
 
+
+/***/ }),
+/* 314 */,
+/* 315 */
+/* no static exports found */
+/* all exports used */
+/*!****************************!*\
+  !*** ./src/sprites/Man.js ***!
+  \****************************/
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _phaser = __webpack_require__(/*! phaser */ 31);
+
+var _phaser2 = _interopRequireDefault(_phaser);
+
+var _config = __webpack_require__(/*! ../config */ 61);
+
+var _config2 = _interopRequireDefault(_config);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _class = function (_Phaser$Sprite) {
+  _inherits(_class, _Phaser$Sprite);
+
+  function _class(_ref) {
+    var game = _ref.game,
+        x = _ref.x,
+        y = _ref.y;
+
+    _classCallCheck(this, _class);
+
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, game, x, y, "sprites"));
+
+    game.physics.arcade.enable(_this);
+    _this.anchor.setTo(0.5, 1.0);
+
+    _this.animations.add('standing', ['frontiersman'], 5, true);
+    _this.animations.play('standing');
+
+    _this.rel_x = x;
+    _this.rel_y = y;
+    return _this;
+  }
+
+  _createClass(_class, [{
+    key: 'moveLeft',
+    value: function moveLeft() {
+      this.scale.x = 1;
+    }
+  }, {
+    key: 'moveRight',
+    value: function moveRight() {
+      this.scale.x = -1;
+    }
+  }, {
+    key: 'stop',
+    value: function stop() {}
+  }]);
+
+  return _class;
+}(_phaser2.default.Sprite);
+
+exports.default = _class;
 
 /***/ })
 ],[313]);

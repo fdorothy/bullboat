@@ -59,28 +59,19 @@ export default class extends Phaser.State {
     }, 1000, this);
 
     // create the bounds of the river
-    this.pts = [];
     var N = 10;
+    this.centerline = [];
+    for (var i=0; i<N; i++)
+      this.centerline.push({x: 0.0, z: i*10.0 + 1.0});
+    this.pts = [];
     for (var i=0; i<N; i++) {
       var pt = new Phaser.Point(0, 0);
-      pt.global = {x: 16.0, y: 0.0, z: i*10.0 + 1.0};
-      pt.camera = {};
-      pt.screen = {};
-      this.project(pt, 10);
-      pt.x = pt.screen.x;
-      pt.y = pt.screen.y;
+      this.sprite3d(pt, 16.0, 0.0, i*10.0 + 1.0);
       this.pts.push(pt);
     }
     for (var i=N-1; i>=0; i--) {
       var pt = new Phaser.Point(0, 0);
-      pt.global = {x: 48.0, y: 0.0, z: i*10.0 + 1.0};
-      pt.camera = {};
-      pt.screen = {};
-      pt.camera = {};
-      pt.screen = {};
-      this.project(pt, 10);
-      pt.x = pt.screen.x;
-      pt.y = pt.screen.y;
+      this.sprite3d(pt, 48.0, 0.0, i*10.0 + 1.0);
       this.pts.push(pt);
     }
     this.riverBounds = new Phaser.Polygon(this.pts);
@@ -129,6 +120,12 @@ export default class extends Phaser.State {
     this.graphics.endFill();
   }
 
+  sprite3d(sprite, x, y, z) {
+    sprite.global = {x: x, y: y, z: z};
+    sprite.camera = {};
+    sprite.screen = {};
+  }
+
   update() {
     var dt = this.game.time.physicsElapsed;
     this.distance += dt * this.speed;
@@ -143,16 +140,19 @@ export default class extends Phaser.State {
     }
 
     // update points on the river
+    this.update_centerline();
     for (var i=0; i<this.pts.length / 2; i++) {
       var pt = this.pts[i];
-      pt.global.x = noise.simplex2((pt.global.z - this.distance) / 100.0, 0.0) * 20 + 16;
+      pt.global.x = this.centerline[i].x + 16;
+      pt.global.z = this.centerline[i].z;
       this.project(pt, 10);
       pt.x = pt.screen.x;
       pt.y = pt.screen.y;
     }
     for (var i=this.pts.length/2; i<this.pts.length; i++) {
       var pt = this.pts[i];
-      pt.global.x = noise.simplex2((pt.global.z - this.distance)  / 100.0, 0.0) * 20 + 48;
+      pt.global.x = this.centerline[this.pts.length - i - 1].x + 48;
+      pt.global.z = this.centerline[this.pts.length - i - 1].z;
       this.project(pt, 10);
       pt.x = pt.screen.x;
       pt.y = pt.screen.y;
@@ -175,7 +175,33 @@ export default class extends Phaser.State {
     }
   }
 
+  centerlineAt(z) {
+    return noise.simplex2((z + this.distance) / 100.0, 0.0) * 30
+  }
+
+  update_centerline() {
+    for (var i=0; i<this.centerline.length; i++) {
+      var pt = this.centerline[i];
+      this.centerline[i].x = this.centerlineAt(pt.z);
+    }
+  }
+
   spawn_terrain() {
+    // calculate where to spawn
+    var z = Math.random()*50 + 50;
+    var cl = this.centerlineAt(z);
+    var x = Math.random() * 128 - 64;
+    var left = false;
+    if (x > 0) {
+      x += 16 + cl;
+    }
+    else if (x < 0) {
+      x -= 16 + cl;
+      left = true;
+    }
+    x += 32;
+
+    // figure out what to spawn
     var t = Math.random();
     var s = null;
     if (t < 0.5) {
@@ -184,18 +210,13 @@ export default class extends Phaser.State {
       s.frameName = 'tree';
     } else {
       s = new Native({game: this.game, x: 0, z: 0})
+      if (left)
+        s.runTo(32 + cl - 14);
+      else
+        s.runTo(32 + cl + 14);
     }
 
-    // place the new terrain randomly in the background
-    var x = Math.random() * 128 - 64;
-    if (x > 0) x += 16;
-    else if (x < 0) x -= 16;
-    s.global = {x: x + 32, y: 0, z: Math.random()*50 + 50};
-    if (s.global.x > 16) {
-      s.global.x += 32;
-    }
-    s.screen = {};
-    s.camera = {};
+    this.sprite3d(s, x, 0, z);
     return s;
   }
 
@@ -208,6 +229,6 @@ export default class extends Phaser.State {
     p.screen.scale = config.camera.depth/p.camera.z;
     p.screen.x     = Math.round((width/2)  + (p.screen.scale * p.camera.x  * width/2));
     p.screen.y     = Math.round((height/8) - (p.screen.scale * p.camera.y  * height/8));
-    p.screen.w     = (             (p.screen.scale * spriteWidth   * width/2));
+    p.screen.w     = (p.screen.scale * spriteWidth   * width/2);
   }
 }

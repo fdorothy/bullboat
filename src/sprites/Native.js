@@ -6,7 +6,7 @@ export default class extends Phaser.Sprite {
     super(game, x, y, "sprites")
     game.physics.arcade.enable(this);
     this.anchor.setTo(0.5, 1.0);
-    this.frameName = 'native_2';
+    this.frameName = 'native_3';
   }
 
   update() {

@@ -7,6 +7,8 @@ export default class extends Phaser.Sprite {
     game.physics.arcade.enable(this);
     this.anchor.setTo(0.5, 1.0);
     this.frameName = 'raft';
+    this.scale.x = 1.0;
+    this.scale.y = 1.0;
   }
 
   moveLeft() {

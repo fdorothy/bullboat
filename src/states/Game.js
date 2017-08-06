@@ -19,12 +19,22 @@ export default class extends Phaser.State {
     // enable crisp rendering
     game.renderer.renderSession.roundPixels = true;
     Phaser.Canvas.setImageRenderingCrisp(this.game.canvas);
+    Phaser.Canvas.setSmoothingEnabled(this.game.canvas, false);
   }
 
   create () {
     this.bigPixels(4);
     this.max_terrain = 10;
     this.speed = 10;
+    this.distance = 0.0;
+
+    // start looping the background music
+    this.music = this.game.add.audio("music");
+    this.music.loopFull();
+
+    // create the background sky
+    var moon = this.game.add.sprite(42, 4, 'sprites');
+    moon.frameName = 'moon';
 
     // create the raft that the player controls
     this.raft = new Player({
@@ -49,25 +59,35 @@ export default class extends Phaser.State {
     }, 1000, this);
 
     // create the bounds of the river
-    var pts = [];
+    this.pts = [];
     var N = 10;
     for (var i=0; i<N; i++) {
-      var p = {global: {x: 16.0, y: 0.0, z: i*10.0 + 1.0}, camera: {}, screen: {}};
-      this.project(p, 10);
-      console.log(p.screen);
-      pts.push(new Phaser.Point(p.screen.x, p.screen.y));
+      var pt = new Phaser.Point(0, 0);
+      pt.global = {x: 16.0, y: 0.0, z: i*10.0 + 1.0};
+      pt.camera = {};
+      pt.screen = {};
+      this.project(pt, 10);
+      pt.x = pt.screen.x;
+      pt.y = pt.screen.y;
+      this.pts.push(pt);
     }
     for (var i=N-1; i>=0; i--) {
-      var p = {global: {x: 48.0, y: 0.0, z: i*10.0 + 1.0}, camera: {}, screen: {}};
-      this.project(p, 10);
-      console.log(p.screen);
-      pts.push(new Phaser.Point(p.screen.x, p.screen.y));
+      var pt = new Phaser.Point(0, 0);
+      pt.global = {x: 48.0, y: 0.0, z: i*10.0 + 1.0};
+      pt.camera = {};
+      pt.screen = {};
+      pt.camera = {};
+      pt.screen = {};
+      this.project(pt, 10);
+      pt.x = pt.screen.x;
+      pt.y = pt.screen.y;
+      this.pts.push(pt);
     }
-    this.riverBounds = new Phaser.Polygon(pts);
+    this.riverBounds = new Phaser.Polygon(this.pts);
     this.graphics = game.add.graphics(0, 0);
 
     // create the bounds of the land
-    pts = [
+    var pts = [
       new Phaser.Point(0, 12),
       new Phaser.Point(64, 12),
       new Phaser.Point(64, 64),
@@ -105,12 +125,13 @@ export default class extends Phaser.State {
 
     // draw the water
     this.graphics.beginFill(0x0088e9);
-    this.graphics.drawPolygon(this.riverBounds.points);
+    this.graphics.drawPolygon(this.pts);
     this.graphics.endFill();
   }
 
   update() {
     var dt = this.game.time.physicsElapsed;
+    this.distance += dt * this.speed;
 
     if (this.cursor.left.isDown) {
       this.raft.moveLeft();
@@ -121,11 +142,27 @@ export default class extends Phaser.State {
       this.raft.stop();
     }
 
+    // update points on the river
+    for (var i=0; i<this.pts.length / 2; i++) {
+      var pt = this.pts[i];
+      pt.global.x = noise.simplex2((pt.global.z - this.distance) / 100.0, 0.0) * 20 + 16;
+      this.project(pt, 10);
+      pt.x = pt.screen.x;
+      pt.y = pt.screen.y;
+    }
+    for (var i=this.pts.length/2; i<this.pts.length; i++) {
+      var pt = this.pts[i];
+      pt.global.x = noise.simplex2((pt.global.z - this.distance)  / 100.0, 0.0) * 20 + 48;
+      this.project(pt, 10);
+      pt.x = pt.screen.x;
+      pt.y = pt.screen.y;
+    }
+
     // update the landscape sprites
     for (var i=0; i<this.terrain.length; i++) {
       var t = this.terrain.getAt(i);
       t.global.z -= dt * this.speed;
-      this.project(t, 1.0);
+      this.project(t, 0.6);
       t.x = t.screen.x;
       t.y = t.screen.y;
       t.scale.x = t.screen.w;

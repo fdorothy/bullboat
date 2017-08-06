@@ -4149,6 +4149,10 @@ var _Man = __webpack_require__(/*! ../sprites/Man */ 315);
 
 var _Man2 = _interopRequireDefault(_Man);
 
+var _Native = __webpack_require__(/*! ../sprites/Native */ 316);
+
+var _Native2 = _interopRequireDefault(_Native);
+
 var _config = __webpack_require__(/*! ../config */ 61);
 
 var _config2 = _interopRequireDefault(_config);
@@ -4294,9 +4298,17 @@ var _class = function (_Phaser$State) {
   }, {
     key: 'spawn_terrain',
     value: function spawn_terrain() {
-      var s = this.game.add.sprite(0, 0, 'sprites');
-      s.anchor.setTo(0.5, 1.0);
-      s.frameName = 'tree';
+      var t = Math.random();
+      var s = null;
+      if (t < 0.5) {
+        s = this.game.add.sprite(0, 0, 'sprites');
+        s.anchor.setTo(0.5, 1.0);
+        s.frameName = 'tree';
+      } else {
+        s = new _Native2.default({ game: this.game, x: 0, z: 0 });
+      }
+
+      // place the new terrain randomly in the background
       var x = Math.random() * 128 - 64;
       if (x > 0) x += 16;else if (x < 0) x -= 16;
       s.global = { x: x + 32, y: 0, z: Math.random() * 50 + 50 };
@@ -10310,6 +10322,73 @@ var _class = function (_Phaser$Sprite) {
     _this.y;
     return _this;
   }
+
+  return _class;
+}(_phaser2.default.Sprite);
+
+exports.default = _class;
+
+/***/ }),
+/* 316 */
+/* no static exports found */
+/* all exports used */
+/*!*******************************!*\
+  !*** ./src/sprites/Native.js ***!
+  \*******************************/
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _phaser = __webpack_require__(/*! phaser */ 31);
+
+var _phaser2 = _interopRequireDefault(_phaser);
+
+var _config = __webpack_require__(/*! ../config */ 61);
+
+var _config2 = _interopRequireDefault(_config);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _class = function (_Phaser$Sprite) {
+  _inherits(_class, _Phaser$Sprite);
+
+  function _class(_ref) {
+    var game = _ref.game,
+        x = _ref.x,
+        y = _ref.y;
+
+    _classCallCheck(this, _class);
+
+    var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, game, x, y, "sprites"));
+
+    game.physics.arcade.enable(_this);
+    _this.anchor.setTo(0.5, 1.0);
+    _this.frameName = 'native_2';
+    return _this;
+  }
+
+  _createClass(_class, [{
+    key: 'update',
+    value: function update() {
+      var vx = 0.0;
+      var dt = this.game.time.physicsElapsed;
+      if (this.global.x < 16.0) vx = 25.0;else if (this.global.x > 48.0) vx = -25.0;else vx = 0.0;
+      this.global.x = vx * dt + this.global.x;
+    }
+  }]);
 
   return _class;
 }(_phaser2.default.Sprite);

@@ -2,6 +2,7 @@
 import Phaser from 'phaser'
 import Player from '../sprites/Player'
 import Man from '../sprites/Man'
+import Native from '../sprites/Native'
 
 import config from '../config'
 
@@ -138,9 +139,17 @@ export default class extends Phaser.State {
   }
 
   spawn_terrain() {
-    var s = this.game.add.sprite(0, 0, 'sprites');
-    s.anchor.setTo(0.5, 1.0);
-    s.frameName = 'tree';
+    var t = Math.random();
+    var s = null;
+    if (t < 0.5) {
+      s = this.game.add.sprite(0, 0, 'sprites');
+      s.anchor.setTo(0.5, 1.0);
+      s.frameName = 'tree';
+    } else {
+      s = new Native({game: this.game, x: 0, z: 0})
+    }
+
+    // place the new terrain randomly in the background
     var x = Math.random() * 128 - 64;
     if (x > 0) x += 16;
     else if (x < 0) x -= 16;

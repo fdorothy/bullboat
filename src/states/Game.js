@@ -34,6 +34,12 @@ export default class extends Phaser.State {
       new Man({game: this.game, x: -2, y: -3}),
       new Man({game: this.game, x: 2, y: -1}),
     ];
+    // have one of them turn every second
+    setInterval(function(ctx) {
+      var man = Math.floor((Math.random()*ctx.men.length));
+      ctx.men[man].scale.x = -ctx.men[man].scale.x;
+    }, 1000, this);
+
 
     var pts = [];
     var N = 10;

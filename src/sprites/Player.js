@@ -2,10 +2,13 @@ import Phaser from 'phaser'
 import config from '../config'
 
 export default class extends Phaser.Sprite {
-  constructor ({ game, x, y, asset }) {
-    super(game, x, y, asset)
+  constructor ({ game, x, y}) {
+    super(game, x, y, "sprites")
     game.physics.arcade.enable(this);
     this.anchor.setTo(0.5, 1.0);
+
+    this.animations.add('standing', ['raft'], 5, true);
+    this.animations.play('standing');
   }
 
   update () {
@@ -21,7 +24,6 @@ export default class extends Phaser.Sprite {
       vx = -config.player.initialSpeed;
     }
     this.body.velocity.x = vx;
-    this.scale.x = -1;
     this.paddleAnimation();
   }
 
@@ -35,7 +37,6 @@ export default class extends Phaser.Sprite {
       vx = config.player.initialSpeed;
     }
     this.body.velocity.x = vx;
-    this.scale.x = 1;
     this.paddleAnimation();
   }
 

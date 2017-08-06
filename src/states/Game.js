@@ -1,6 +1,7 @@
 /* globals __DEV__ */
 import Phaser from 'phaser'
 import Player from '../sprites/Player'
+import Man from '../sprites/Man'
 
 import config from '../config'
 
@@ -22,12 +23,17 @@ export default class extends Phaser.State {
   create () {
     this.bigPixels(4);
 
-    this.player = new Player({
+    this.raft = new Player({
       game: this.game,
       x: 32,
-      y: 64 - 6,
-      asset: 'ms'
+      y: 64 - 6
     })
+    this.men = [
+      new Man({game: this.game, x: -5, y: -5}),
+      new Man({game: this.game, x: 5, y: -5}),
+      new Man({game: this.game, x: -2, y: -3}),
+      new Man({game: this.game, x: 2, y: -1}),
+    ];
 
     var pts = [];
     var N = 10;
@@ -51,7 +57,11 @@ export default class extends Phaser.State {
     this.graphics.endFill();
 
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
-    this.game.add.existing(this.player)
+    this.game.add.existing(this.raft)
+    for (var i=0; i<this.men.length; i++) {
+      console.log("added dude");
+      this.game.add.existing(this.men[i]);
+    }
 
     this.cursor = this.game.input.keyboard.createCursorKeys();
     this.game.input.keyboard.addKeyCapture([
@@ -73,12 +83,20 @@ export default class extends Phaser.State {
     this.graphics.endFill();
 
     if (this.cursor.left.isDown) {
-      this.player.moveLeft();
+      this.raft.moveLeft();
     }
     else if (this.cursor.right.isDown) {
-      this.player.moveRight();
+      this.raft.moveRight();
     } else {
-      this.player.stop();
+      this.raft.stop();
+    }
+
+    // update the dudes on the raft's position
+    var cx = this.raft.x;
+    var cy = this.raft.y;
+    for (var i=0; i<this.men.length; i++) {
+      this.men[i].x = this.men[i].rel_x + cx;
+      this.men[i].y = this.men[i].rel_y + cy;
     }
   }
 

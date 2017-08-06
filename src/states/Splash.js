@@ -9,6 +9,7 @@ export default class extends Phaser.State {
     this.loaderBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'loaderBar')
     centerGameObjects([this.loaderBg, this.loaderBar])
     this.load.setPreloadSprite(this.loaderBar)
+    this.game.load.atlas("sprites", "assets/images/spritesheet.png", "assets/images/sprites.json")
   }
 
   create () {

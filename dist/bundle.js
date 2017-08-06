@@ -3982,16 +3982,11 @@ var _class = function (_Phaser$Sprite) {
 
     game.physics.arcade.enable(_this);
     _this.anchor.setTo(0.5, 1.0);
-
-    _this.animations.add('standing', ['raft'], 5, true);
-    _this.animations.play('standing');
+    _this.frameName = 'raft';
     return _this;
   }
 
   _createClass(_class, [{
-    key: 'update',
-    value: function update() {}
-  }, {
     key: 'moveLeft',
     value: function moveLeft() {
       var dt = this.game.time.physicsElapsed;
@@ -4003,7 +3998,6 @@ var _class = function (_Phaser$Sprite) {
         vx = -_config2.default.player.initialSpeed;
       }
       this.body.velocity.x = vx;
-      this.paddleAnimation();
     }
   }, {
     key: 'moveRight',
@@ -4017,7 +4011,6 @@ var _class = function (_Phaser$Sprite) {
         vx = _config2.default.player.initialSpeed;
       }
       this.body.velocity.x = vx;
-      this.paddleAnimation();
     }
   }, {
     key: 'stop',
@@ -4032,15 +4025,8 @@ var _class = function (_Phaser$Sprite) {
         if (vx < 0) vx = 0;
       }
       if (vx < _config2.default.player.initialSpeed && vx > -_config2.default.player.initialSpeed) vx = 0;
-      this.stopAnimation();
       this.body.velocity.x = vx;
     }
-  }, {
-    key: 'paddleAnimation',
-    value: function paddleAnimation() {}
-  }, {
-    key: 'stopAnimation',
-    value: function stopAnimation() {}
   }]);
 
   return _class;
@@ -4188,7 +4174,7 @@ var _class = function (_Phaser$State) {
   _createClass(_class, [{
     key: 'init',
     value: function init() {
-      this.stage.backgroundColor = '#000';
+      this.stage.backgroundColor = '#66c3ff';
     }
   }, {
     key: 'preload',
@@ -4207,14 +4193,21 @@ var _class = function (_Phaser$State) {
     key: 'create',
     value: function create() {
       this.bigPixels(4);
+      this.max_terrain = 10;
+      this.speed = 10;
 
+      // create the raft that the player controls
       this.raft = new _Player2.default({
         game: this.game,
         x: 32,
         y: 64 - 6
       });
+
+      // place men on the raft
       this.men = [new _Man2.default({ game: this.game, x: -5, y: -5 }), new _Man2.default({ game: this.game, x: 5, y: -5 }), new _Man2.default({ game: this.game, x: -2, y: -3 }), new _Man2.default({ game: this.game, x: 2, y: -1 })];
-      // have one of them turn every second
+      for (var i = 0; i < this.men.length; i++) {
+        this.raft.addChild(this.men[i]);
+      } // have one of the men turn every second
       setInterval(function (ctx) {
         var man = Math.floor(Math.random() * ctx.men.length);
         ctx.men[man].scale.x = -ctx.men[man].scale.x;
@@ -4224,13 +4217,13 @@ var _class = function (_Phaser$State) {
       var pts = [];
       var N = 10;
       for (var i = 0; i < N; i++) {
-        var p = { world: { x: 16.0, y: 0.0, z: i * 10.0 + 1.0 }, camera: {}, screen: {} };
+        var p = { global: { x: 16.0, y: 0.0, z: i * 10.0 + 1.0 }, camera: {}, screen: {} };
         this.project(p, 10);
         console.log(p.screen);
         pts.push(new _phaser2.default.Point(p.screen.x, p.screen.y));
       }
       for (var i = N - 1; i >= 0; i--) {
-        var p = { world: { x: 48.0, y: 0.0, z: i * 10.0 + 1.0 }, camera: {}, screen: {} };
+        var p = { global: { x: 48.0, y: 0.0, z: i * 10.0 + 1.0 }, camera: {}, screen: {} };
         this.project(p, 10);
         console.log(p.screen);
         pts.push(new _phaser2.default.Point(p.screen.x, p.screen.y));
@@ -4243,11 +4236,13 @@ var _class = function (_Phaser$State) {
       this.landBounds = new _phaser2.default.Polygon(pts);
 
       this.game.physics.startSystem(_phaser2.default.Physics.ARCADE);
+
+      // cannister for landscape sprites
+      this.terrain = this.game.add.group();
+      for (var i = 0; i < this.max_terrain; i++) {
+        this.terrain.add(this.spawn_terrain(), true, 0);
+      } // add sprites to the game
       this.game.add.existing(this.raft);
-      for (var i = 0; i < this.men.length; i++) {
-        console.log("added dude");
-        this.game.add.existing(this.men[i]);
-      }
 
       this.cursor = this.game.input.keyboard.createCursorKeys();
       this.game.input.keyboard.addKeyCapture([_phaser2.default.Keyboard.LEFT, _phaser2.default.Keyboard.RIGHT, _phaser2.default.Keyboard.UP, _phaser2.default.Keyboard.DOWN, _phaser2.default.Keyboard.SPACEBAR]);
@@ -4270,6 +4265,8 @@ var _class = function (_Phaser$State) {
   }, {
     key: 'update',
     value: function update() {
+      var dt = this.game.time.physicsElapsed;
+
       if (this.cursor.left.isDown) {
         this.raft.moveLeft();
       } else if (this.cursor.right.isDown) {
@@ -4278,26 +4275,50 @@ var _class = function (_Phaser$State) {
         this.raft.stop();
       }
 
-      // update the dudes on the raft's position
-      var cx = this.raft.x;
-      var cy = this.raft.y;
-      for (var i = 0; i < this.men.length; i++) {
-        this.men[i].x = this.men[i].rel_x + cx;
-        this.men[i].y = this.men[i].rel_y + cy;
+      // update the landscape sprites
+      for (var i = 0; i < this.terrain.length; i++) {
+        var t = this.terrain.getAt(i);
+        t.global.z -= dt * this.speed;
+        this.project(t, 1.0);
+        t.x = t.screen.x;
+        t.y = t.screen.y;
+        t.scale.x = t.screen.w;
+        t.scale.y = t.screen.w;
+        if (t.global.z < 0.0) {
+          this.terrain.removeChildAt(i);
+          t.destroy();
+          this.terrain.add(this.spawn_terrain(), false, 0);
+        }
       }
     }
   }, {
+    key: 'spawn_terrain',
+    value: function spawn_terrain() {
+      var s = this.game.add.sprite(0, 0, 'sprites');
+      s.anchor.setTo(0.5, 1.0);
+      s.frameName = 'tree';
+      var x = Math.random() * 128 - 64;
+      if (x > 0) x += 16;else if (x < 0) x -= 16;
+      s.global = { x: x + 32, y: 0, z: Math.random() * 50 + 50 };
+      if (s.global.x > 16) {
+        s.global.x += 32;
+      }
+      s.screen = {};
+      s.camera = {};
+      return s;
+    }
+  }, {
     key: 'project',
-    value: function project(p, roadWidth) {
+    value: function project(p, spriteWidth) {
       var width = _config2.default.gameWidth;
       var height = _config2.default.gameHeight;
-      p.camera.x = (p.world.x || 0) - _config2.default.camera.x;
-      p.camera.y = (p.world.y || 0) - _config2.default.camera.y;
-      p.camera.z = (p.world.z || 0) - _config2.default.camera.z;
+      p.camera.x = (p.global.x || 0) - _config2.default.camera.x;
+      p.camera.y = (p.global.y || 0) - _config2.default.camera.y;
+      p.camera.z = (p.global.z || 0) - _config2.default.camera.z;
       p.screen.scale = _config2.default.camera.depth / p.camera.z;
       p.screen.x = Math.round(width / 2 + p.screen.scale * p.camera.x * width / 2);
       p.screen.y = Math.round(height / 8 - p.screen.scale * p.camera.y * height / 8);
-      p.screen.w = Math.round(p.screen.scale * roadWidth * width / 2);
+      p.screen.w = p.screen.scale * spriteWidth * width / 2;
     }
   }]);
 
@@ -10254,8 +10275,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 var _phaser = __webpack_require__(/*! phaser */ 31);
 
 var _phaser2 = _interopRequireDefault(_phaser);
@@ -10286,29 +10305,11 @@ var _class = function (_Phaser$Sprite) {
 
     game.physics.arcade.enable(_this);
     _this.anchor.setTo(0.5, 1.0);
-
-    _this.animations.add('standing', ['frontiersman'], 5, true);
-    _this.animations.play('standing');
-
-    _this.rel_x = x;
-    _this.rel_y = y;
+    _this.frameName = 'frontiersman';
+    _this.x;
+    _this.y;
     return _this;
   }
-
-  _createClass(_class, [{
-    key: 'moveLeft',
-    value: function moveLeft() {
-      this.scale.x = 1;
-    }
-  }, {
-    key: 'moveRight',
-    value: function moveRight() {
-      this.scale.x = -1;
-    }
-  }, {
-    key: 'stop',
-    value: function stop() {}
-  }]);
 
   return _class;
 }(_phaser2.default.Sprite);

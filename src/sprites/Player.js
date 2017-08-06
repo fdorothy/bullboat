@@ -6,12 +6,7 @@ export default class extends Phaser.Sprite {
     super(game, x, y, "sprites")
     game.physics.arcade.enable(this);
     this.anchor.setTo(0.5, 1.0);
-
-    this.animations.add('standing', ['raft'], 5, true);
-    this.animations.play('standing');
-  }
-
-  update () {
+    this.frameName = 'raft';
   }
 
   moveLeft() {
@@ -24,7 +19,6 @@ export default class extends Phaser.Sprite {
       vx = -config.player.initialSpeed;
     }
     this.body.velocity.x = vx;
-    this.paddleAnimation();
   }
 
   moveRight() {
@@ -37,7 +31,6 @@ export default class extends Phaser.Sprite {
       vx = config.player.initialSpeed;
     }
     this.body.velocity.x = vx;
-    this.paddleAnimation();
   }
 
   stop() {
@@ -54,13 +47,6 @@ export default class extends Phaser.Sprite {
     }
     if (vx < config.player.initialSpeed && vx > -config.player.initialSpeed)
       vx = 0;
-    this.stopAnimation();
     this.body.velocity.x = vx;
-  }
-
-  paddleAnimation() {
-  }
-
-  stopAnimation() {
   }
 }

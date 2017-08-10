@@ -182,16 +182,17 @@ export default class extends Phaser.State {
     var raftZ = this.raft.global.z;
     for (var i=0; i<this.terrain.length; i++) {
       var t = this.terrain.getAt(i);
-      if (Math.abs(raftZ - t.global.z) < 5.0) {
-        if (Math.abs(raftX - t.global.x) < 5.0) {
-          console.log("hit!");
-          if (this.men.length > 1) {
-            var man = this.men.pop();
-            man.destroy();
-            this.terrain.removeChildAt(i);
-            t.destroy();
-          } else
-            this.state.start("GameOver");
+      if (t.enemy) {
+        if (Math.abs(raftZ - t.global.z) < 5.0) {
+          if (Math.abs(raftX - t.global.x) < 5.0) {
+            console.log("hit!");
+            if (this.men.length > 1) {
+              var man = this.men.pop();
+              t.addChild(man);
+              t.enemy = false;
+            } else
+              this.state.start("GameOver");
+          }
         }
       }
     }
@@ -244,6 +245,7 @@ export default class extends Phaser.State {
       s.frameName = 'tree';
     } else {
       s = new Native({game: this.game, x: 0, z: 0})
+      s.enemy = true;
       if (left)
         s.runTo(32 + cl - 14);
       else

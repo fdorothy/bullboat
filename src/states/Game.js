@@ -23,7 +23,7 @@ export default class extends Phaser.State {
   }
 
   create () {
-    this.bigPixels(4);
+    this.bigPixels(6);
     this.max_terrain = 10;
     this.speed = 10;
     this.distance = 0.0;
@@ -42,6 +42,7 @@ export default class extends Phaser.State {
       x: 32,
       y: 64 - 6
     })
+    this.sprite3d(this.raft, 32.0, 0.0, 9.0);
 
     // place men on the raft
     this.men = [
@@ -131,10 +132,12 @@ export default class extends Phaser.State {
     this.distance += dt * this.speed;
 
     if (this.cursor.left.isDown) {
-      this.raft.moveLeft();
+      //this.raft.moveLeft();
+      this.raft.global.x-=dt*10;
     }
     else if (this.cursor.right.isDown) {
-      this.raft.moveRight();
+      //this.raft.moveRight();
+      this.raft.global.x+=dt*10;
     } else {
       this.raft.stop();
     }
@@ -157,7 +160,7 @@ export default class extends Phaser.State {
       pt.x = pt.screen.x;
       pt.y = pt.screen.y;
     }
-
+    
     // update the landscape sprites
     for (var i=0; i<this.terrain.length; i++) {
       var t = this.terrain.getAt(i);
@@ -173,6 +176,20 @@ export default class extends Phaser.State {
         this.terrain.add(this.spawn_terrain(), false, 0);
       }
     }
+
+    // move the raft along the river if it is out of bounds
+    var x = this.raft.global.x;
+    var cx = this.centerline[1].x;
+    console.log ("x: " + x + " cx: " + cx);
+    if (x-32 < cx - 12)
+      this.raft.global.x = cx - 12 + 32;
+    if (x-32 > cx + 12)
+      this.raft.global.x = cx + 12 + 32;
+
+    // project raft's on the scene
+    this.project(this.raft, 10);
+    this.raft.x = this.raft.screen.x;
+    this.raft.y = this.raft.screen.y;
   }
 
   centerlineAt(z) {

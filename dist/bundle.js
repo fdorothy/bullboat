@@ -1951,8 +1951,8 @@ exports.default = {
   player: {
     accel: 20,
     deaccel: 15,
-    targetSpeed: 10,
-    initialSpeed: 1
+    targetSpeed: 23,
+    initialSpeed: 5
   },
   camera: {
     x: 32.0,
@@ -4199,7 +4199,7 @@ var _class = function (_Phaser$State) {
   }, {
     key: 'create',
     value: function create() {
-      this.bigPixels(4);
+      this.bigPixels(6);
       this.max_terrain = 10;
       this.speed = 10;
       this.distance = 0.0;
@@ -4218,6 +4218,7 @@ var _class = function (_Phaser$State) {
         x: 32,
         y: 64 - 6
       });
+      this.sprite3d(this.raft, 32.0, 0.0, 9.0);
 
       // place men on the raft
       this.men = [new _Man2.default({ game: this.game, x: -5, y: -5 }), new _Man2.default({ game: this.game, x: 5, y: -5 }), new _Man2.default({ game: this.game, x: -2, y: -3 }), new _Man2.default({ game: this.game, x: 2, y: -1 })];
@@ -4293,9 +4294,11 @@ var _class = function (_Phaser$State) {
       this.distance += dt * this.speed;
 
       if (this.cursor.left.isDown) {
-        this.raft.moveLeft();
+        //this.raft.moveLeft();
+        this.raft.global.x -= dt * 10;
       } else if (this.cursor.right.isDown) {
-        this.raft.moveRight();
+        //this.raft.moveRight();
+        this.raft.global.x += dt * 10;
       } else {
         this.raft.stop();
       }
@@ -4334,11 +4337,23 @@ var _class = function (_Phaser$State) {
           this.terrain.add(this.spawn_terrain(), false, 0);
         }
       }
+
+      // move the raft along the river if it is out of bounds
+      var x = this.raft.global.x;
+      var cx = this.centerline[1].x;
+      console.log("x: " + x + " cx: " + cx);
+      if (x - 32 < cx - 12) this.raft.global.x = cx - 12 + 32;
+      if (x - 32 > cx + 12) this.raft.global.x = cx + 12 + 32;
+
+      // project raft's on the scene
+      this.project(this.raft, 10);
+      this.raft.x = this.raft.screen.x;
+      this.raft.y = this.raft.screen.y;
     }
   }, {
     key: 'centerlineAt',
     value: function centerlineAt(z) {
-      return noise.simplex2((z + this.distance) / 100.0, 0.0) * 30;
+      return noise.simplex2((z + this.distance) / 100.0, 0.0) * 20;
     }
   }, {
     key: 'update_centerline',

@@ -8,8 +8,8 @@ export default {
   player: {
     accel: 20,
     deaccel: 15,
-    targetSpeed: 10,
-    initialSpeed: 1
+    targetSpeed: 23,
+    initialSpeed: 5
   },
   camera: {
     x: 32.0,

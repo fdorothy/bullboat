@@ -176,7 +176,7 @@ export default class extends Phaser.State {
   }
 
   centerlineAt(z) {
-    return noise.simplex2((z + this.distance) / 100.0, 0.0) * 30
+    return noise.simplex2((z + this.distance) / 100.0, 0.0) * 20
   }
 
   update_centerline() {

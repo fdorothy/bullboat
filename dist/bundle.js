@@ -4338,12 +4338,28 @@ var _class = function (_Phaser$State) {
         }
       }
 
+      // check if we hit anything
+      var raftX = this.raft.global.x;
+      var raftZ = this.raft.global.z;
+      for (var i = 0; i < this.terrain.length; i++) {
+        var t = this.terrain.getAt(i);
+        if (Math.abs(raftZ - t.global.z) < 5.0) {
+          if (Math.abs(raftX - t.global.x) < 5.0) {
+            console.log("hit!");
+            if (this.men.length > 1) {
+              var man = this.men.pop();
+              man.destroy();
+              this.terrain.removeChildAt(i);
+              t.destroy();
+            } else this.state.start("GameOver");
+          }
+        }
+      }
+
       // move the raft along the river if it is out of bounds
-      var x = this.raft.global.x;
       var cx = this.centerline[1].x;
-      console.log("x: " + x + " cx: " + cx);
-      if (x - 32 < cx - 12) this.raft.global.x = cx - 12 + 32;
-      if (x - 32 > cx + 12) this.raft.global.x = cx + 12 + 32;
+      if (raftX - 32 < cx - 12) this.raft.global.x = cx - 12 + 32;
+      if (raftX - 32 > cx + 12) this.raft.global.x = cx + 12 + 32;
 
       // project raft's on the scene
       this.project(this.raft, 10);

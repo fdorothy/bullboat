@@ -4201,7 +4201,8 @@ var _class = function (_Phaser$State) {
     value: function create() {
       this.bigPixels(6);
       this.max_terrain = 10;
-      this.speed = 10;
+      this.river_speed = 10;
+      this.speed = this.river_speed;
       this.distance = 0.0;
 
       // start looping the background music
@@ -4219,6 +4220,13 @@ var _class = function (_Phaser$State) {
         y: 64 - 6
       });
       this.sprite3d(this.raft, 32.0, 0.0, 9.0);
+
+      // create the cannonball that shoots from the raft
+      this.cannonBall = this.game.add.sprite(42, 4, 'sprites');
+      this.cannonBall.frameName = 'cannonball';
+      this.cannonBall.visible = false;
+      this.cannonBall.timer = 0;
+      this.sprite3d(this.cannonBall, 32, 0, 9.0);
 
       // place men on the raft
       this.men = [new _Man2.default({ game: this.game, x: -5, y: -5 }), new _Man2.default({ game: this.game, x: 5, y: -5 }), new _Man2.default({ game: this.game, x: -2, y: -3 }), new _Man2.default({ game: this.game, x: 2, y: -1 })];
@@ -4263,6 +4271,7 @@ var _class = function (_Phaser$State) {
       this.game.add.existing(this.raft);
 
       this.cursor = this.game.input.keyboard.createCursorKeys();
+      this.spacebar = this.game.input.keyboard.addKey(_phaser2.default.Keyboard.SPACEBAR);
       this.game.input.keyboard.addKeyCapture([_phaser2.default.Keyboard.LEFT, _phaser2.default.Keyboard.RIGHT, _phaser2.default.Keyboard.UP, _phaser2.default.Keyboard.DOWN, _phaser2.default.Keyboard.SPACEBAR]);
     }
   }, {
@@ -4299,6 +4308,9 @@ var _class = function (_Phaser$State) {
       } else if (this.cursor.right.isDown) {
         //this.raft.moveRight();
         this.raft.global.x += dt * 10;
+      } else if (this.spacebar.isDown) {
+        console.log('shoot');
+        this.shoot();
       } else {
         this.raft.stop();
       }
@@ -4341,17 +4353,22 @@ var _class = function (_Phaser$State) {
       // check if we hit anything
       var raftX = this.raft.global.x;
       var raftZ = this.raft.global.z;
+      this.speed = this.river_speed;
       for (var i = 0; i < this.terrain.length; i++) {
         var t = this.terrain.getAt(i);
-        if (t.enemy) {
-          if (Math.abs(raftZ - t.global.z) < 5.0) {
-            if (Math.abs(raftX - t.global.x) < 5.0) {
+        if (Math.abs(raftZ - t.global.z) < 5.0) {
+          if (Math.abs(raftX - t.global.x) < 5.0) {
+            if (t.enemy) {
               console.log("hit!");
               if (this.men.length > 1) {
                 var man = this.men.pop();
                 t.addChild(man);
                 t.enemy = false;
               } else this.state.start("GameOver");
+            } else if (t.immovable) {
+              this.speed = 0.0;
+            } else if (t.slowdown) {
+              this.speed = this.river_speed / 2.0;
             }
           }
         }
@@ -4366,6 +4383,20 @@ var _class = function (_Phaser$State) {
       this.project(this.raft, 10);
       this.raft.x = this.raft.screen.x;
       this.raft.y = this.raft.screen.y;
+
+      // cannonball update
+      if (this.cannonBall.timer >= 0.0) {
+        var cb = this.cannonBall;
+        cb.global.z += dt * 100.0;
+        cb.timer -= dt;
+        this.project(cb, 1);
+        cb.x = cb.screen.x;
+        cb.y = cb.screen.y;
+        cb.scale.x = cb.screen.w;
+        cb.scale.y = cb.screen.w;
+      } else {
+        this.cannonBall.visible = false;
+      }
     }
   }, {
     key: 'centerlineAt',
@@ -4403,6 +4434,7 @@ var _class = function (_Phaser$State) {
         s = this.game.add.sprite(0, 0, 'sprites');
         s.anchor.setTo(0.5, 1.0);
         s.frameName = 'tree';
+        s.immovable = true;
       } else {
         s = new _Native2.default({ game: this.game, x: 0, z: 0 });
         s.enemy = true;
@@ -4424,6 +4456,18 @@ var _class = function (_Phaser$State) {
       p.screen.x = Math.round(width / 2 + p.screen.scale * p.camera.x * width / 2);
       p.screen.y = Math.round(height / 8 - p.screen.scale * p.camera.y * height / 8);
       p.screen.w = p.screen.scale * spriteWidth * width / 2;
+    }
+  }, {
+    key: 'shoot',
+    value: function shoot() {
+      if (this.cannonBall.timer <= 0.0) {
+        this.cannonBall.timer = 1.0;
+        this.cannonBall.visible = true;
+        this.cannonBall.global.x = this.raft.global.x;
+        this.cannonBall.global.y = this.raft.global.y;
+        this.cannonBall.global.z = this.raft.global.z + 10.0;
+        this.game.world.bringToTop(this.cannonBall);
+      }
     }
   }]);
 

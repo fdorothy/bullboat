@@ -28,6 +28,7 @@ export default class extends Phaser.State {
     this.river_speed = 10;
     this.speed = this.river_speed;
     this.distance = 0.0;
+    this.sprites = [];
 
     // start looping the background music
     this.music = this.game.add.audio("music");
@@ -39,14 +40,14 @@ export default class extends Phaser.State {
 
     // create the raft that the player controls
     this.raft = new Player(this.game, 32, 64 - 6)
-    this.sprite3d(this.raft, 32.0, 0.0, 9.0);
+    this.sprite3d(this.raft, 32.0, 0.0, 9.0, false);
 
     // create the cannonball that shoots from the raft
     this.cannonBall = this.game.add.sprite(42, 4, 'sprites');
     this.cannonBall.frameName = 'cannonball';
     this.cannonBall.visible = false;
     this.cannonBall.timer = 0;
-    this.sprite3d(this.cannonBall, 32, 0, 9.0);
+    this.sprite3d(this.cannonBall, 32, 0, 9.0, true);
 
     // place men on the raft
     this.men = [
@@ -55,8 +56,11 @@ export default class extends Phaser.State {
       new Man(this.game, -2, -3),
       new Man(this.game,  2, -1),
     ];
-    for (var i=0; i<this.men.length; i++)
+    for (var i=0; i<this.men.length; i++) {
+      var m = this.men[i];
+      this.sprite3d(m, m.x, 0.0, m.z, false);
       this.raft.addChild(this.men[i]);
+    }
     // have one of the men turn every second
     setInterval(function(ctx) {
       var man = Math.floor((Math.random()*ctx.men.length));
@@ -71,12 +75,12 @@ export default class extends Phaser.State {
     this.pts = [];
     for (var i=0; i<N; i++) {
       var pt = new Phaser.Point(0, 0);
-      this.sprite3d(pt, 16.0, 0.0, i*10.0 + 1.0);
+      this.sprite3d(pt, 16.0, 0.0, i*10.0 + 1.0, false);
       this.pts.push(pt);
     }
     for (var i=N-1; i>=0; i--) {
       var pt = new Phaser.Point(0, 0);
-      this.sprite3d(pt, 48.0, 0.0, i*10.0 + 1.0);
+      this.sprite3d(pt, 48.0, 0.0, i*10.0 + 1.0, false);
       this.pts.push(pt);
     }
     this.riverBounds = new Phaser.Polygon(this.pts);
@@ -126,25 +130,24 @@ export default class extends Phaser.State {
     this.graphics.endFill();
   }
 
-  sprite3d(sprite, x, y, z) {
+  sprite3d(sprite, x, y, z, resize) {
     sprite.global = {x: x, y: y, z: z};
     sprite.camera = {};
     sprite.screen = {};
+    sprite.resize = resize;
+    this.sprites.push(sprite);
   }
 
   update() {
     var dt = this.game.time.physicsElapsed;
     this.distance += dt * this.speed;
 
-    if (this.cursor.left.isDown) {
+    if (this.cursor.left.isDown)
       this.raft.global.x-=dt*10;
-    }
-    else if (this.cursor.right.isDown) {
+    else if (this.cursor.right.isDown)
       this.raft.global.x+=dt*10;
-    }
-    else if (this.spacebar.isDown) {
+    else if (this.spacebar.isDown)
       this.shoot();
-    }
 
     // update points on the river
     this.update_centerline();
@@ -152,20 +155,20 @@ export default class extends Phaser.State {
       var pt = this.pts[i];
       pt.global.x = this.centerline[i].x + 16;
       pt.global.z = this.centerline[i].z;
-      this.project(pt, 10, false);
+      this.project(pt);
     }
     for (var i=this.pts.length/2; i<this.pts.length; i++) {
       var pt = this.pts[i];
       pt.global.x = this.centerline[this.pts.length - i - 1].x + 48;
       pt.global.z = this.centerline[this.pts.length - i - 1].z;
-      this.project(pt, 10, false);
+      this.project(pt);
     }
     
     // update the landscape sprites
     for (var i=0; i<this.terrain.length; i++) {
       var t = this.terrain.getAt(i);
       t.global.z -= dt * this.speed;
-      this.project(t, 0.6, true);
+      this.project(t);
       if (t.global.z < 0.0) {
         this.terrain.removeChildAt(i);
         t.destroy();
@@ -207,14 +210,14 @@ export default class extends Phaser.State {
       this.raft.global.x = cx + 12 + 32;
 
     // project raft's on the scene
-    this.project(this.raft, 1.0, false);
+    this.project(this.raft);
 
     // cannonball update
     if (this.cannonBall.timer >= 0.0) {
       var cb = this.cannonBall;
       cb.global.z += dt * 100.0;
       cb.timer -= dt;
-      this.project(cb, 1, true);
+      this.project(cb);
     } else {
       this.cannonBall.visible = false;
     }
@@ -263,11 +266,12 @@ export default class extends Phaser.State {
         s.runTo(32 + cl + 14);
     }
 
-    this.sprite3d(s, x, 0, z);
+    this.sprite3d(s, x, 0, z, true);
     return s;
   }
 
-  project(p, spriteWidth, scale) {
+  project(p) {
+    var spriteWidth = 0.6;
     var width = config.gameWidth;
     var height = config.gameHeight;
     p.camera.x     = (p.global.x || 0) - config.camera.x;
@@ -279,7 +283,7 @@ export default class extends Phaser.State {
     p.screen.w     = (p.screen.scale * spriteWidth   * width/2);
     p.x = p.screen.x;
     p.y = p.screen.y;
-    if (scale) {
+    if (p.resize) {
       p.scale.x = p.screen.w;
       p.scale.y = p.screen.w;
     }

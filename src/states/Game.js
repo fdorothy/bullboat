@@ -50,10 +50,10 @@ export default class extends Phaser.State {
 
     // place men on the raft
     this.men = [
-      new Man({game: this.game, x: -5, y: -5}),
-      new Man({game: this.game, x: 5, y: -5}),
-      new Man({game: this.game, x: -2, y: -3}),
-      new Man({game: this.game, x: 2, y: -1}),
+      new Man(this.game, -5, -5),
+      new Man(this.game,  5, -5),
+      new Man(this.game, -2, -3),
+      new Man(this.game,  2, -1),
     ];
     for (var i=0; i<this.men.length; i++)
       this.raft.addChild(this.men[i]);
@@ -269,7 +269,7 @@ export default class extends Phaser.State {
       s.frameName = 'tree';
       s.immovable = true;
     } else {
-      s = new Native({game: this.game, x: 0, z: 0})
+      s = new Native(this.game, 0, 0)
       s.enemy = true;
       if (left)
         s.runTo(32 + cl - 14);

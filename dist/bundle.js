@@ -4175,7 +4175,7 @@ var _class = function (_Phaser$State) {
       this.sprite3d(this.cannonBall, 32, 0, 9.0);
 
       // place men on the raft
-      this.men = [new _Man2.default({ game: this.game, x: -5, y: -5 }), new _Man2.default({ game: this.game, x: 5, y: -5 }), new _Man2.default({ game: this.game, x: -2, y: -3 }), new _Man2.default({ game: this.game, x: 2, y: -1 })];
+      this.men = [new _Man2.default(this.game, -5, -5), new _Man2.default(this.game, 5, -5), new _Man2.default(this.game, -2, -3), new _Man2.default(this.game, 2, -1)];
       for (var i = 0; i < this.men.length; i++) {
         this.raft.addChild(this.men[i]);
       } // have one of the men turn every second
@@ -4377,7 +4377,7 @@ var _class = function (_Phaser$State) {
         s.frameName = 'tree';
         s.immovable = true;
       } else {
-        s = new _Native2.default({ game: this.game, x: 0, z: 0 });
+        s = new _Native2.default(this.game, 0, 0);
         s.enemy = true;
         if (left) s.runTo(32 + cl - 14);else s.runTo(32 + cl + 14);
       }
@@ -10386,11 +10386,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var _class = function (_Phaser$Sprite) {
   _inherits(_class, _Phaser$Sprite);
 
-  function _class(_ref) {
-    var game = _ref.game,
-        x = _ref.x,
-        y = _ref.y;
-
+  function _class(game, x, y) {
     _classCallCheck(this, _class);
 
     var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, game, x, y, "sprites"));
@@ -10445,11 +10441,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var _class = function (_Phaser$Sprite) {
   _inherits(_class, _Phaser$Sprite);
 
-  function _class(_ref) {
-    var game = _ref.game,
-        x = _ref.x,
-        y = _ref.y;
-
+  function _class(game, x, y) {
     _classCallCheck(this, _class);
 
     var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, game, x, y, "sprites"));

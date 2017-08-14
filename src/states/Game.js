@@ -152,28 +152,20 @@ export default class extends Phaser.State {
       var pt = this.pts[i];
       pt.global.x = this.centerline[i].x + 16;
       pt.global.z = this.centerline[i].z;
-      this.project(pt, 10);
-      pt.x = pt.screen.x;
-      pt.y = pt.screen.y;
+      this.project(pt, 10, false);
     }
     for (var i=this.pts.length/2; i<this.pts.length; i++) {
       var pt = this.pts[i];
       pt.global.x = this.centerline[this.pts.length - i - 1].x + 48;
       pt.global.z = this.centerline[this.pts.length - i - 1].z;
-      this.project(pt, 10);
-      pt.x = pt.screen.x;
-      pt.y = pt.screen.y;
+      this.project(pt, 10, false);
     }
     
     // update the landscape sprites
     for (var i=0; i<this.terrain.length; i++) {
       var t = this.terrain.getAt(i);
       t.global.z -= dt * this.speed;
-      this.project(t, 0.6);
-      t.x = t.screen.x;
-      t.y = t.screen.y;
-      t.scale.x = t.screen.w;
-      t.scale.y = t.screen.w;
+      this.project(t, 0.6, true);
       if (t.global.z < 0.0) {
         this.terrain.removeChildAt(i);
         t.destroy();
@@ -215,20 +207,14 @@ export default class extends Phaser.State {
       this.raft.global.x = cx + 12 + 32;
 
     // project raft's on the scene
-    this.project(this.raft, 10);
-    this.raft.x = this.raft.screen.x;
-    this.raft.y = this.raft.screen.y;
+    this.project(this.raft, 1.0, false);
 
     // cannonball update
     if (this.cannonBall.timer >= 0.0) {
       var cb = this.cannonBall;
       cb.global.z += dt * 100.0;
       cb.timer -= dt;
-      this.project(cb, 1);
-      cb.x = cb.screen.x;
-      cb.y = cb.screen.y;
-      cb.scale.x = cb.screen.w;
-      cb.scale.y = cb.screen.w;
+      this.project(cb, 1, true);
     } else {
       this.cannonBall.visible = false;
     }
@@ -281,7 +267,7 @@ export default class extends Phaser.State {
     return s;
   }
 
-  project(p, spriteWidth) {
+  project(p, spriteWidth, scale) {
     var width = config.gameWidth;
     var height = config.gameHeight;
     p.camera.x     = (p.global.x || 0) - config.camera.x;
@@ -291,6 +277,12 @@ export default class extends Phaser.State {
     p.screen.x     = Math.round((width/2)  + (p.screen.scale * p.camera.x  * width/2));
     p.screen.y     = Math.round((height/8) - (p.screen.scale * p.camera.y  * height/8));
     p.screen.w     = (p.screen.scale * spriteWidth   * width/2);
+    p.x = p.screen.x;
+    p.y = p.screen.y;
+    if (scale) {
+      p.scale.x = p.screen.w;
+      p.scale.y = p.screen.w;
+    }
   }
 
   shoot() {

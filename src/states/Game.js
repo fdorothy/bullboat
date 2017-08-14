@@ -38,11 +38,7 @@ export default class extends Phaser.State {
     moon.frameName = 'moon';
 
     // create the raft that the player controls
-    this.raft = new Player({
-      game: this.game,
-      x: 32,
-      y: 64 - 6
-    })
+    this.raft = new Player(this.game, 32, 64 - 6)
     this.sprite3d(this.raft, 32.0, 0.0, 9.0);
 
     // create the cannonball that shoots from the raft
@@ -141,18 +137,13 @@ export default class extends Phaser.State {
     this.distance += dt * this.speed;
 
     if (this.cursor.left.isDown) {
-      //this.raft.moveLeft();
       this.raft.global.x-=dt*10;
     }
     else if (this.cursor.right.isDown) {
-      //this.raft.moveRight();
       this.raft.global.x+=dt*10;
     }
     else if (this.spacebar.isDown) {
-      console.log('shoot');
       this.shoot();
-    } else {
-      this.raft.stop();
     }
 
     // update points on the river

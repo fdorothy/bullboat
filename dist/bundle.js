@@ -3950,8 +3950,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 var _phaser = __webpack_require__(/*! phaser */ 31);
 
 var _phaser2 = _interopRequireDefault(_phaser);
@@ -3971,65 +3969,17 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var _class = function (_Phaser$Sprite) {
   _inherits(_class, _Phaser$Sprite);
 
-  function _class(_ref) {
-    var game = _ref.game,
-        x = _ref.x,
-        y = _ref.y;
-
+  function _class(game, x, y) {
     _classCallCheck(this, _class);
 
     var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, game, x, y, "sprites"));
 
-    game.physics.arcade.enable(_this);
     _this.anchor.setTo(0.5, 1.0);
     _this.frameName = 'raft';
     _this.scale.x = 1.0;
     _this.scale.y = 1.0;
     return _this;
   }
-
-  _createClass(_class, [{
-    key: 'moveLeft',
-    value: function moveLeft() {
-      var dt = this.game.time.physicsElapsed;
-      var accel = _config2.default.player.accel;
-      var vx = this.body.velocity.x - accel * dt;
-      if (vx < -_config2.default.player.targetSpeed) {
-        vx = -_config2.default.player.targetSpeed;
-      } else if (vx > -_config2.default.player.initialSpeed) {
-        vx = -_config2.default.player.initialSpeed;
-      }
-      this.body.velocity.x = vx;
-    }
-  }, {
-    key: 'moveRight',
-    value: function moveRight() {
-      var dt = this.game.time.physicsElapsed;
-      var accel = _config2.default.player.accel;
-      var vx = this.body.velocity.x + accel * dt;
-      if (vx > _config2.default.player.targetSpeed) {
-        vx = _config2.default.player.targetSpeed;
-      } else if (vx < _config2.default.player.initialSpeed) {
-        vx = _config2.default.player.initialSpeed;
-      }
-      this.body.velocity.x = vx;
-    }
-  }, {
-    key: 'stop',
-    value: function stop() {
-      var dt = this.game.time.physicsElapsed;
-      var vx = this.body.velocity.x;
-      if (vx < 0) {
-        vx += _config2.default.player.deaccel * dt;
-        if (vx > 0) vx = 0;
-      } else if (vx > 0) {
-        vx -= _config2.default.player.deaccel * dt;
-        if (vx < 0) vx = 0;
-      }
-      if (vx < _config2.default.player.initialSpeed && vx > -_config2.default.player.initialSpeed) vx = 0;
-      this.body.velocity.x = vx;
-    }
-  }]);
 
   return _class;
 }(_phaser2.default.Sprite);
@@ -4214,11 +4164,7 @@ var _class = function (_Phaser$State) {
       moon.frameName = 'moon';
 
       // create the raft that the player controls
-      this.raft = new _Player2.default({
-        game: this.game,
-        x: 32,
-        y: 64 - 6
-      });
+      this.raft = new _Player2.default(this.game, 32, 64 - 6);
       this.sprite3d(this.raft, 32.0, 0.0, 9.0);
 
       // create the cannonball that shoots from the raft
@@ -4303,16 +4249,11 @@ var _class = function (_Phaser$State) {
       this.distance += dt * this.speed;
 
       if (this.cursor.left.isDown) {
-        //this.raft.moveLeft();
         this.raft.global.x -= dt * 10;
       } else if (this.cursor.right.isDown) {
-        //this.raft.moveRight();
         this.raft.global.x += dt * 10;
       } else if (this.spacebar.isDown) {
-        console.log('shoot');
         this.shoot();
-      } else {
-        this.raft.stop();
       }
 
       // update points on the river

@@ -14,7 +14,7 @@ export default class extends Phaser.State {
 
   create () {
     this.max_terrain = 10;
-    this.river_speed = 15;
+    this.river_speed = 20;
     this.speed = this.river_speed;
     this.distance = 0.0;
     this.sprites = [];
@@ -133,7 +133,7 @@ export default class extends Phaser.State {
     var dt = this.game.time.physicsElapsed;
     this.distance += dt * this.speed;
     if (this.river_speed < 30) {
-      this.river_speed = this.distance / 1000.0 + 15.0;
+      this.river_speed = this.distance / 1000.0 + 20.0;
       console.log("speed = " + this.river_speed);
     }
 

@@ -132,6 +132,10 @@ export default class extends Phaser.State {
   update() {
     var dt = this.game.time.physicsElapsed;
     this.distance += dt * this.speed;
+    if (this.river_speed < 30) {
+      this.river_speed = this.distance / 1000.0 + 15.0;
+      console.log("speed = " + this.river_speed);
+    }
 
     if (this.cursor.left.isDown)
       this.raft.global.x-=dt*10;
@@ -209,7 +213,7 @@ export default class extends Phaser.State {
     // cannonball update
     if (this.cannonBall.timer >= 0.0) {
       var cb = this.cannonBall;
-      cb.global.z += dt * 100.0;
+      cb.global.z += dt * 25.0;
       cb.timer -= dt;
       this.project(cb);
     } else {
@@ -301,7 +305,7 @@ export default class extends Phaser.State {
 
   shoot() {
     if (this.cannonBall.timer <= 0.0) {
-      this.cannonBall.timer = 1.0;
+      this.cannonBall.timer = 3.0;
       this.cannonBall.visible = true;
       this.cannonBall.global.x = this.raft.global.x;
       this.cannonBall.global.y = this.raft.global.y;

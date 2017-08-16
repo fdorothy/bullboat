@@ -29,6 +29,7 @@ export default class extends Phaser.State {
     this.speed = this.river_speed;
     this.distance = 0.0;
     this.sprites = [];
+    this.spawn_timer = 0.0;
 
     // start looping the background music
     this.music = this.game.add.audio("music");
@@ -99,8 +100,6 @@ export default class extends Phaser.State {
 
     // cannister for landscape sprites
     this.terrain = this.game.add.group();
-    for (var i=0; i<this.max_terrain; i++)
-      this.terrain.add(this.spawn_terrain(), true, 0);
 
     // add sprites to the game
     this.game.add.existing(this.raft)
@@ -149,6 +148,14 @@ export default class extends Phaser.State {
     else if (this.spacebar.isDown)
       this.shoot();
 
+    // check if anything needs to be spawned
+    this.spawn_timer -= dt;
+    if (this.spawn_timer < 0.0) {
+      if (this.terrain.length < this.max_terrain)
+        this.terrain.add(this.spawn_terrain(), false, 0);
+      this.spawn_timer = 1.0;
+    }
+
     // update points on the river
     this.update_centerline();
     for (var i=0; i<this.pts.length / 2; i++) {
@@ -172,7 +179,6 @@ export default class extends Phaser.State {
       if (t.global.z < 0.0) {
         this.terrain.removeChildAt(i);
         t.destroy();
-        this.terrain.add(this.spawn_terrain(), false, 0);
       }
     }
 
@@ -200,7 +206,9 @@ export default class extends Phaser.State {
         }
       }
     }
-    
+
+    // check if our cannonball hit anything
+    this.check_cannon();
 
     // move the raft along the river if it is out of bounds
     var cx = this.centerline[1].x;
@@ -231,6 +239,22 @@ export default class extends Phaser.State {
     for (var i=0; i<this.centerline.length; i++) {
       var pt = this.centerline[i];
       this.centerline[i].x = this.centerlineAt(pt.z);
+    }
+  }
+
+  check_cannon() {
+    if (this.cannonBall.visible) {
+      var x = this.cannonBall.global.x;
+      var z = this.cannonBall.global.z;
+      for (var i=0; i<this.terrain.length; i++) {
+        var t = this.terrain.getAt(i);
+        if (Math.abs(z - t.global.z) < 20.0) {
+          if (Math.abs(x - t.global.x) < 5.0) {
+            this.terrain.removeChildAt(i);
+            t.destroy();
+          }
+        }
+      }
     }
   }
 

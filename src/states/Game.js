@@ -12,20 +12,9 @@ export default class extends Phaser.State {
   }
   preload () {}
 
-  bigPixels(size) {
-    game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
-    game.scale.setUserScale(size, size);
-
-    // enable crisp rendering
-    game.renderer.renderSession.roundPixels = true;
-    Phaser.Canvas.setImageRenderingCrisp(this.game.canvas);
-    Phaser.Canvas.setSmoothingEnabled(this.game.canvas, false);
-  }
-
   create () {
-    this.bigPixels(6);
     this.max_terrain = 10;
-    this.river_speed = 10;
+    this.river_speed = 15;
     this.speed = this.river_speed;
     this.distance = 0.0;
     this.sprites = [];
@@ -51,12 +40,15 @@ export default class extends Phaser.State {
     this.sprite3d(this.cannonBall, 32, 0, 9.0, true);
 
     // place men on the raft
-    this.men = [
-      new Man(this.game, -5, -5),
-      new Man(this.game,  5, -5),
-      new Man(this.game, -2, -3),
-      new Man(this.game,  2, -1),
-    ];
+    var pos = [[-5, -5],
+               [5, -5],
+               [-2, -3],
+               [2, -1]];
+    this.men = [];
+    for (var i=0; i<config.player.lives; i++) {
+      var [x,y] = pos[i];
+      this.men.push(new Man(this.game, x, y));
+    }
     for (var i=0; i<this.men.length; i++) {
       var m = this.men[i];
       this.sprite3d(m, m.x, 0.0, m.z, false);
@@ -191,13 +183,7 @@ export default class extends Phaser.State {
       if (Math.abs(raftZ - t.global.z) < 5.0) {
         if (Math.abs(raftX - t.global.x) < 5.0) {
           if (t.enemy) {
-            console.log("hit!");
-            if (this.men.length > 1) {
-              var man = this.men.pop();
-              t.addChild(man);
-              t.enemy = false;
-            } else
-              this.state.start("GameOver");
+            this.state.start("Hit");
           } else if (t.immovable) {
             this.speed = 0.0;
           } else if (t.slowdown) {
@@ -285,9 +271,9 @@ export default class extends Phaser.State {
       s = new Native(this.game, 0, 0)
       s.enemy = true;
       if (left)
-        s.runTo(32 + cl - 14);
+        s.runTo(32 + cl - 7);
       else
-        s.runTo(32 + cl + 14);
+        s.runTo(32 + cl + 7);
     }
 
     this.sprite3d(s, x, 0, z, true);
@@ -319,7 +305,7 @@ export default class extends Phaser.State {
       this.cannonBall.visible = true;
       this.cannonBall.global.x = this.raft.global.x;
       this.cannonBall.global.y = this.raft.global.y;
-      this.cannonBall.global.z = this.raft.global.z + 10.0;
+      this.cannonBall.global.z = this.raft.global.z + 5.0;
       this.game.world.bringToTop(this.cannonBall);
     }
   }

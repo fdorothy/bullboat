@@ -14,7 +14,18 @@ export default class extends Phaser.State {
     this.game.load.audio("music", "assets/sound/water.mp3");
   }
 
+  bigPixels(size) {
+    game.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+    game.scale.setUserScale(size, size);
+
+    // enable crisp rendering
+    game.renderer.renderSession.roundPixels = true;
+    Phaser.Canvas.setImageRenderingCrisp(this.game.canvas);
+    Phaser.Canvas.setSmoothingEnabled(this.game.canvas, false);
+  }
+
   create () {
+    this.bigPixels(6);
     this.state.start('Game')
   }
 }

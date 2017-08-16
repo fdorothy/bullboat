@@ -2,30 +2,29 @@
 import Phaser from 'phaser'
 
 export default class extends Phaser.State {
-  init () {}
+  init () {
+    this.stage.backgroundColor = '#000000';
+  }
   preload () {}
 
   create () {
-    const bannerText = 'GAME OVER'
-    let banner = this.add.text(this.world.centerX, this.game.height / 2.0, bannerText)
-    banner.font = 'Bangers'
+    const bannerText = 'Game Over'
+    let banner = this.add.text(0, 16, "Game Over");
+    banner.font = 'Arial'
     banner.padding.set(10, 16)
-    banner.fontSize = 40
-    banner.fill = '#77BFA3'
+    banner.fontSize = 12
+    banner.fill = '#aaaaaa'
     banner.smoothed = false
-    banner.anchor.setTo(0.5)
-
-    var retry = game.make.sprite(this.world.centerX, this.game.height / 2.0, 'retry');
-    retry.inputEnabled = true;
-    retry.input.priorityID = 1;
-    retry.input.useHandCursor = true;
-    retry.events.onInputDown.add(this.onretry, this);
+    this.timer = 5.0;
   }
 
-  onretry () {
-    this.state.start('Game');
+  update () {
+    var dt = this.game.time.physicsElapsed;
+    this.timer -= dt;
+    if (this.timer < 0.0)
+      this.state.start('Game');
   }
 
-render () {
+  render () {
   }
 }

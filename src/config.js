@@ -9,7 +9,8 @@ export default {
     accel: 20,
     deaccel: 15,
     targetSpeed: 23,
-    initialSpeed: 5
+    initialSpeed: 5,
+    lives: 4
   },
   camera: {
     x: 32.0,

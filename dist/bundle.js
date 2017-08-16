@@ -1547,7 +1547,8 @@ exports.default = {
     accel: 20,
     deaccel: 15,
     targetSpeed: 23,
-    initialSpeed: 5
+    initialSpeed: 5,
+    lives: 4
   },
   camera: {
     x: 32.0,
@@ -3856,6 +3857,10 @@ var _GameOver = __webpack_require__(/*! ./states/GameOver */ 126);
 
 var _GameOver2 = _interopRequireDefault(_GameOver);
 
+var _Hit = __webpack_require__(/*! ./states/Hit */ 317);
+
+var _Hit2 = _interopRequireDefault(_Hit);
+
 var _config = __webpack_require__(/*! ./config */ 46);
 
 var _config2 = _interopRequireDefault(_config);
@@ -3884,6 +3889,7 @@ var Game = function (_Phaser$Game) {
     _this.state.add('Splash', _Splash2.default, false);
     _this.state.add('Game', _Game2.default, false);
     _this.state.add('GameOver', _GameOver2.default, false);
+    _this.state.add('Hit', _Hit2.default, false);
 
     _this.state.start('Boot');
     return _this;
@@ -4167,10 +4173,6 @@ var _class = function (_Phaser$State) {
         },
         active: this.fontsLoaded
       });
-
-      var text = this.add.text(this.world.centerX, this.world.centerY, 'loading...', { font: '16px Arial', fill: '#aaaaaa', align: 'center' });
-      text.anchor.setTo(0.5, 0.5);
-
       this.load.image('loaderBg', './assets/images/loader-bg.png');
       this.load.image('loaderBar', './assets/images/loader-bar.png');
     }
@@ -4208,6 +4210,8 @@ exports.default = _class;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -4258,22 +4262,10 @@ var _class = function (_Phaser$State) {
     key: 'preload',
     value: function preload() {}
   }, {
-    key: 'bigPixels',
-    value: function bigPixels(size) {
-      game.scale.scaleMode = _phaser2.default.ScaleManager.USER_SCALE;
-      game.scale.setUserScale(size, size);
-
-      // enable crisp rendering
-      game.renderer.renderSession.roundPixels = true;
-      _phaser2.default.Canvas.setImageRenderingCrisp(this.game.canvas);
-      _phaser2.default.Canvas.setSmoothingEnabled(this.game.canvas, false);
-    }
-  }, {
     key: 'create',
     value: function create() {
-      this.bigPixels(6);
       this.max_terrain = 10;
-      this.river_speed = 10;
+      this.river_speed = 15;
       this.speed = this.river_speed;
       this.distance = 0.0;
       this.sprites = [];
@@ -4299,7 +4291,15 @@ var _class = function (_Phaser$State) {
       this.sprite3d(this.cannonBall, 32, 0, 9.0, true);
 
       // place men on the raft
-      this.men = [new _Man2.default(this.game, -5, -5), new _Man2.default(this.game, 5, -5), new _Man2.default(this.game, -2, -3), new _Man2.default(this.game, 2, -1)];
+      var pos = [[-5, -5], [5, -5], [-2, -3], [2, -1]];
+      this.men = [];
+      for (var i = 0; i < _config2.default.player.lives; i++) {
+        var _pos$i = _slicedToArray(pos[i], 2),
+            x = _pos$i[0],
+            y = _pos$i[1];
+
+        this.men.push(new _Man2.default(this.game, x, y));
+      }
       for (var i = 0; i < this.men.length; i++) {
         var m = this.men[i];
         this.sprite3d(m, m.x, 0.0, m.z, false);
@@ -4420,12 +4420,7 @@ var _class = function (_Phaser$State) {
         if (Math.abs(raftZ - t.global.z) < 5.0) {
           if (Math.abs(raftX - t.global.x) < 5.0) {
             if (t.enemy) {
-              console.log("hit!");
-              if (this.men.length > 1) {
-                var man = this.men.pop();
-                t.addChild(man);
-                t.enemy = false;
-              } else this.state.start("GameOver");
+              this.state.start("Hit");
             } else if (t.immovable) {
               this.speed = 0.0;
             } else if (t.slowdown) {
@@ -4513,7 +4508,7 @@ var _class = function (_Phaser$State) {
       } else {
         s = new _Native2.default(this.game, 0, 0);
         s.enemy = true;
-        if (left) s.runTo(32 + cl - 14);else s.runTo(32 + cl + 14);
+        if (left) s.runTo(32 + cl - 7);else s.runTo(32 + cl + 7);
       }
 
       this.sprite3d(s, x, 0, z, true);
@@ -4547,7 +4542,7 @@ var _class = function (_Phaser$State) {
         this.cannonBall.visible = true;
         this.cannonBall.global.x = this.raft.global.x;
         this.cannonBall.global.y = this.raft.global.y;
-        this.cannonBall.global.z = this.raft.global.z + 10.0;
+        this.cannonBall.global.z = this.raft.global.z + 5.0;
         this.game.world.bringToTop(this.cannonBall);
       }
     }
@@ -4600,32 +4595,30 @@ var _class = function (_Phaser$State) {
 
   _createClass(_class, [{
     key: 'init',
-    value: function init() {}
+    value: function init() {
+      this.stage.backgroundColor = '#000000';
+    }
   }, {
     key: 'preload',
     value: function preload() {}
   }, {
     key: 'create',
     value: function create() {
-      var bannerText = 'GAME OVER';
-      var banner = this.add.text(this.world.centerX, this.game.height / 2.0, bannerText);
-      banner.font = 'Bangers';
+      var bannerText = 'Game Over';
+      var banner = this.add.text(0, 16, "Game Over");
+      banner.font = 'Arial';
       banner.padding.set(10, 16);
-      banner.fontSize = 40;
-      banner.fill = '#77BFA3';
+      banner.fontSize = 12;
+      banner.fill = '#aaaaaa';
       banner.smoothed = false;
-      banner.anchor.setTo(0.5);
-
-      var retry = game.make.sprite(this.world.centerX, this.game.height / 2.0, 'retry');
-      retry.inputEnabled = true;
-      retry.input.priorityID = 1;
-      retry.input.useHandCursor = true;
-      retry.events.onInputDown.add(this.onretry, this);
+      this.timer = 5.0;
     }
   }, {
-    key: 'onretry',
-    value: function onretry() {
-      this.state.start('Game');
+    key: 'update',
+    value: function update() {
+      var dt = this.game.time.physicsElapsed;
+      this.timer -= dt;
+      if (this.timer < 0.0) this.state.start('Game');
     }
   }, {
     key: 'render',
@@ -4693,8 +4686,20 @@ var _class = function (_Phaser$State) {
       this.game.load.audio("music", "assets/sound/water.mp3");
     }
   }, {
+    key: 'bigPixels',
+    value: function bigPixels(size) {
+      game.scale.scaleMode = _phaser2.default.ScaleManager.USER_SCALE;
+      game.scale.setUserScale(size, size);
+
+      // enable crisp rendering
+      game.renderer.renderSession.roundPixels = true;
+      _phaser2.default.Canvas.setImageRenderingCrisp(this.game.canvas);
+      _phaser2.default.Canvas.setSmoothingEnabled(this.game.canvas, false);
+    }
+  }, {
     key: 'create',
     value: function create() {
+      this.bigPixels(6);
       this.state.start('Game');
     }
   }]);
@@ -10490,6 +10495,137 @@ module.exports = __webpack_require__(/*! ./modules/_core */ 25);
 __webpack_require__(/*! babel-polyfill */120);
 module.exports = __webpack_require__(/*! /Users/fredricdorothy/personal/games/bullboat/src/main.js */119);
 
+
+/***/ }),
+/* 316 */,
+/* 317 */
+/* no static exports found */
+/* all exports used */
+/*!***************************!*\
+  !*** ./src/states/Hit.js ***!
+  \***************************/
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _phaser = __webpack_require__(/*! phaser */ 24);
+
+var _phaser2 = _interopRequireDefault(_phaser);
+
+var _Player = __webpack_require__(/*! ../sprites/Player */ 123);
+
+var _Player2 = _interopRequireDefault(_Player);
+
+var _Man = __webpack_require__(/*! ../sprites/Man */ 121);
+
+var _Man2 = _interopRequireDefault(_Man);
+
+var _Native = __webpack_require__(/*! ../sprites/Native */ 122);
+
+var _Native2 = _interopRequireDefault(_Native);
+
+var _config = __webpack_require__(/*! ../config */ 46);
+
+var _config2 = _interopRequireDefault(_config);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } /* globals __DEV__ */
+
+
+var _class = function (_Phaser$State) {
+  _inherits(_class, _Phaser$State);
+
+  function _class() {
+    _classCallCheck(this, _class);
+
+    return _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).apply(this, arguments));
+  }
+
+  _createClass(_class, [{
+    key: 'init',
+    value: function init() {
+      this.stage.backgroundColor = '#66c3ff';
+    }
+  }, {
+    key: 'create',
+    value: function create() {
+      // create the raft that the player controls
+      var raft_x = 32;
+      var raft_y = 32;
+      this.raft = this.game.add.sprite(raft_x, raft_y, 'sprites');
+      this.raft.frameName = 'raft';
+      this.raft.anchor.setTo(0.5, 1.0);
+
+      // place men on the raft
+      var pos = [[-5, -5], [5, -5], [-2, -3], [2, -1]];
+      this.man = null;
+      for (var i = 0; i < _config2.default.player.lives; i++) {
+        var _pos$i = _slicedToArray(pos[i], 2),
+            x = _pos$i[0],
+            y = _pos$i[1];
+
+        this.man = this.game.add.sprite(x + raft_x, y + raft_y, "sprites");
+        this.man.anchor.setTo(0.5, 1.0);
+        this.man.frameName = 'frontiersman';
+      }
+
+      // place native and tween him across the screen
+      this.enemy = this.game.add.sprite(48, this.man.y, "sprites");
+      this.enemy.anchor.setTo(0.5, 1.0);
+      this.enemy.frameName = 'native_3';
+      this.timer = 5.0;
+      this.tween = null;
+    }
+  }, {
+    key: 'render',
+    value: function render() {}
+  }, {
+    key: 'update',
+    value: function update() {
+      var dt = this.game.time.physicsElapsed;
+      this.timer -= dt;
+
+      if (this.timer < 4.0 && this.tween == null) {
+        this.tween = this.game.add.tween(this.enemy).to({ x: this.man.x + 5 });
+        this.tween.start();
+        this.tween.onComplete.add(this.goBack, this);
+      }
+
+      if (this.timer <= 0.0) {
+        _config2.default.player.lives -= 1;
+        if (_config2.default.player.lives <= 0) this.state.start("GameOver");else this.state.start("Game");
+      }
+    }
+  }, {
+    key: 'goBack',
+    value: function goBack() {
+      console.log("go back");
+      this.man.x = 0;
+      this.man.y = 0;
+      this.enemy.addChild(this.man);
+      var tween = this.game.add.tween(this.enemy).to({ x: 100 }, 2000);
+      tween.start();
+    }
+  }]);
+
+  return _class;
+}(_phaser2.default.State);
+
+exports.default = _class;
 
 /***/ })
 ],[315]);

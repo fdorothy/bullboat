@@ -134,7 +134,6 @@ export default class extends Phaser.State {
     this.distance += dt * this.speed;
     if (this.river_speed < 30) {
       this.river_speed = this.distance / 1000.0 + 20.0;
-      console.log("speed = " + this.river_speed);
     }
 
     if (this.cursor.left.isDown)
